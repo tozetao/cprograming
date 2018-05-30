@@ -9,6 +9,7 @@
 
 void error_handling(char *message);
 
+//客户端负责多次发数据
 int main(int argc, char *argv[])
 {
     int sock;
@@ -33,21 +34,13 @@ int main(int argc, char *argv[])
     serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
     serv_addr.sin_port = htons(atoi(argv[2]));
 
-    while(1)
-    {
-        fputs("Insert message (q to quit): ", stdout);
-        fgets(message, sizeof(message), stdin);
+    char msg1[] = "hello world'";
+    char msg2[] = "fuck your month";
+    char msg3[] = "this is messsage";
 
-        if(!strcmp(message, "q\n") || !strcmp(message, "Q\n"))
-            break;
-
-        sendto(sock, message, strlen(message), 0, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-        adr_sz = sizeof(from_adr);
-        str_len = recvfrom(sock, message, BUF_SIZE, 0, (struct sockaddr*)&from_adr, &adr_sz);
-        message[str_len] = 0;
-
-        printf("Message from server: %s\n", message);
-    }
+    sendto(sock, msg1, sizeof(msg1), 0, (struct *sockaddr)&serv_addr, sizeof(serv_addr));
+    sendto(sock, msg2, sizeof(msg2), 0, (struct *sockaddr)&serv_addr, sizeof(serv_addr));
+    sendto(sock, msg3, sizeof(msg3), 0, (struct *sockaddr)&serv_addr, sizeof(serv_addr));
 
     close(sock);
     return 0;
