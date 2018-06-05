@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
@@ -27,7 +28,7 @@ int main(int argc, char const *argv[])
     act.sa_flags = 0;
 
     //注册
-    sigaction(SIGALRM, &act, 0);
+    sigaction(SIGCHLD, &act, 0);
 
     pid = fork();
     if(pid == 0){
@@ -35,7 +36,20 @@ int main(int argc, char const *argv[])
         sleep(10);
         return 110;
     }else{
-        
+        printf("Child proc id:%d\n", pid);
+        pid = fork();
+        if(pid == 0){
+            puts("Hi, I'm a child process");
+            sleep(10);
+            exit(20);
+        }else{
+            printf("Child proc id:%d\n", pid);
+            int i;
+            for(i=0; i<5; i++){
+                puts("wait...");
+                sleep(5);
+            }
+        }
     }
 
     return 0;
