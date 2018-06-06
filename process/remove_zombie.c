@@ -37,6 +37,7 @@ int main(int argc, char const *argv[])
         sleep(10);
         return 110;
     }else{
+<<<<<<< HEAD
         printf("Child proc id: %d\n", pid);
 
         pid = fork();
@@ -49,6 +50,19 @@ int main(int argc, char const *argv[])
             printf("Child proc id: %d\n", pid);
             for(i=0; i<5; i++){
                 puts("wait...\n");
+=======
+        printf("Child proc id:%d\n", pid);
+        pid = fork();
+        if(pid == 0){
+            puts("Hi, I'm a child process");
+            sleep(10);
+            exit(20);
+        }else{
+            printf("Child proc id:%d\n", pid);
+            int i;
+            for(i=0; i<5; i++){
+                puts("wait...");
+>>>>>>> 7754b51c36f00efb558c279e543421dc3cf7cf5e
                 sleep(5);
             }
         }
