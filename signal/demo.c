@@ -21,18 +21,7 @@ void printfSigset(const sigset_t *set)
 
 int main(int argc, char const *argv[])
 {
-    int i;
-    sigset_t set;
-
-    sigemptyset(&set);
-    sigaddset(&set, 10);
-    if (sigismember(&set, 10)) {
-        printf("is member\n");
-    }
-    printfSigset(&set);
-
-    char *result = strsignal(2);
-    printf("%s\n", result);
-
+    int limit = sysconf(_SC_SIGQUEUE_MAX);
+    printf("%d\n", limit);
     return 0;
 }
