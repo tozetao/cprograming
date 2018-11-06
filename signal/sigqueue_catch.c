@@ -1,7 +1,10 @@
 #define _GNU_SOURCE
 #include <string.h>
 #include <signal.h>
-#include <stblib.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <errno.h>
 
 static volatile int handlerSleepTime;
 static volatile int sigCnt = 0;
@@ -18,12 +21,13 @@ static void siginfoHandler(int sig, siginfo_t *si, void *ucontext)
 
     printf("caught signal: %d\n", sig);
 
-    printf("   si_signo=%d, si_code=%d (%s), ", si->si_signo, 
+    printf("   si_signo = %d, si_code = %d (%s), ", si->si_signo, 
         (si->si_code == SI_USER) ? "SI_USER" :
         (si->si_code == SI_QUEUE) ? "SI_QUEUE" : "other" );
-    printf("si_value=%d\n", si->si_value.sival_int);
-    printf("   si_pid=%ld, si_uid=%ld\n", (long)si->si_pid, (long)si->si_uid);
+    printf("si_value = %d\n", si->si_value.sival_int);
+    printf("   si_pid = %ld, si_uid = %ld\n", (long)si->si_pid, (long)si->si_uid);
 
+    printf("sigCnt = %d\n", sigCnt);
     sleep(handlerSleepTime);
 }
 
@@ -41,12 +45,13 @@ int main(int argc, char const *argv[])
     sigfillset(&sa.sa_mask);
 
     // 注册信号处理器程序
-    for(sig=1; sig<MSIG; sig++){
+    for(sig = 1; sig < NSIG; sig++) {
         if (sig != SIGTSTP || sig != SIGQUIT) {
             sigaction(sig, &sa, NULL);
         }
     }
 
+    //如果有传递1个参数，则进行睡眠
     if (argc > 1) {
         sigfillset(&blockMask);
         sigdelset(&blockMask, SIGINT);
@@ -68,8 +73,12 @@ int main(int argc, char const *argv[])
         }
     }
 
-    while(!allDone)
-        pause();
+    // allDone为1时停止进程睡眠
+    while(!allDone) 
+    {
+        int p = pause();
+        printf("pause = %d\n", p);
+    }
 
     return 0;
 }
