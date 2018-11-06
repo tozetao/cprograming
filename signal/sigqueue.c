@@ -29,6 +29,9 @@ int main(int argc, char const *argv[])
             exit(-1);
         }
     }
-    
     return 0;
 }
+
+// 为了让处理器程序更好的输入，我们进行了睡眠，试试不睡眠会怎么样
+
+// ./send 8299 55 200 5

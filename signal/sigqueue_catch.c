@@ -21,14 +21,15 @@ static void siginfoHandler(int sig, siginfo_t *si, void *ucontext)
 
     printf("caught signal: %d\n", sig);
 
-    printf("   si_signo = %d, si_code = %d (%s), ", si->si_signo, 
+    printf("   si_signo = %d, si_code = %d (%s), ", si->si_signo, si->si_code, 
         (si->si_code == SI_USER) ? "SI_USER" :
-        (si->si_code == SI_QUEUE) ? "SI_QUEUE" : "other" );
+        (si->si_code == SI_QUEUE) ? "SI_QUEUE" : "other");
+
     printf("si_value = %d\n", si->si_value.sival_int);
     printf("   si_pid = %ld, si_uid = %ld\n", (long)si->si_pid, (long)si->si_uid);
 
-    printf("sigCnt = %d\n", sigCnt);
-    sleep(handlerSleepTime);
+    printf("   sigCnt = %d\n", sigCnt);
+    // sleep(handlerSleepTime);
 }
 
 int main(int argc, char const *argv[])
