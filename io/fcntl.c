@@ -52,7 +52,5 @@ void setfl_test()
 
 int main(int argc, char const *argv[])
 {
-
-
     return 0;
 }

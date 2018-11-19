@@ -1,8 +1,13 @@
-#include "<stdio.h>"
-#include "<signal.h>"
+#include <stdio.h>
+#include <signal.h>
 
 void sigHandler(int sig)
 {
+    int i;
+    for(i = 1; i <= 3; i++) {
+        printf("handler%d\n", i);
+        sleep(2);
+    }
     printf("Ouch\n");
 }
 

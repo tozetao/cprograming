@@ -10,7 +10,7 @@ void printf_err(char *s)
     exit(-1);
 }
 
-int main(int argc, char const *argv[])
+void foo() 
 {
     int fd, openFlags, filePerms;
     int length = 1024;
@@ -41,6 +41,25 @@ int main(int argc, char const *argv[])
     // }
     
     close(fd);
+}
 
+// 测试同一个文件句柄下的不同文件描述符
+void test_point()
+{
+    int openFlags = O_CREAT | O_RDWR;
+    char pathname[] = "./test.log";
+
+    int fd1 = open(pathname, openFlags);
+    int fd2 = dup(fd1);
+
+    lseek(fd1, 10, SEEK_SET);
+
+    int cur_point = lseek(fd2, 0, SEEK_CUR);
+    printf("current point: %d\n", cur_point);
+}
+
+int main(int argc, char const *argv[])
+{
+    test_point();
     return 0;
 }
