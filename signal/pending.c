@@ -1,59 +1,52 @@
 #define _GUN_SOURCE
 #include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
 
 void sighandle(int sig)
 {
     printf("signal: %d\n", sig);
-    if (signal(SIGINT, SIG_DFL) == SIG_ERR) {
-        printf("sig_del error\n");
+}
+
+void printPendingSig(sigset_t *pendSet)
+{
+    int i;
+    for(i = 1; i < NSIG; i++) {
+        if (sigismember(pendSet, i)) {
+            printf("pending signal %d\n", i);
+        }
     }
 }
 
+//阻塞某个信号，在睡眠期间，多次发送该信号，测试解除阻塞信号后的处理情况
 int main(int argc, char const *argv[])
 {
-    /* code */
-    int i;
-    sigset_t blockSet, prevSet, pendSet;
+    sigset_t pendSet, prevSet, blockSet; 
+    int i, cnt;
 
-    // 注册sigint信号的处理程序
-    if (signal(SIGINT, &sighandle) == SIG_ERR) {
-        printf("registe sigint error.\n");
-        return -1;
+    sigemptyset(&prevSet);
+
+    // 为所有信号注册处理程序
+    for(i = 1; i < NSIG; i++) {
+        signal(i, sighandle);
     }
 
-    sigemptyset(&blockSet);
-    sigaddset(&blockSet, SIGINT);
+    // 阻塞所有信号
+    sigfillset(&blockSet);
+    sigprocmask(SIG_BLOCK, &blockSet, &prevSet);
 
-    // 阻塞SIGINT信号
-    if (sigprocmask(SIG_BLOCK, &blockSet, &prevSet) == -1) {
-        printf("block set error\n");
-        return -1;
-    }
-
-    // 睡眠5秒，在睡眠期间触发SIGINT信号，看看该信号的处理程序是否会调用
-    for(i=0; i<5; i++) {
+    // 睡眠，在睡眠期间手动去触发信号，测试效果
+    for(cnt = 0; cnt < 3; cnt++) {
+        printf("sleep %d\n", cnt + 1);
         sleep(1);
-        printf("sleep %d\n", i);
     }
 
-    // 获取阻塞的信号
-    if (sigpending(&pendSet) == -1) {
-        printf("sigpending error\n");
-        return -1;
-    }
+    // 打印正在阻塞的信号
+    sigpending(&pendSet);
+    printPendingSig(&pendSet);
 
-    // 判断SIGINT信号是否在信号掩码中
-    if (sigismember(&pendSet, SIGINT)) {
-        printf("SIGINT is in set\n");
-    }
-
-    // 将信号掩码重置为原先的状态以解除对信号的阻塞
-    printf("end pending...\n");
-    if (sigprocmask(SIG_SETMASK, &prevSet, NULL) == -1) {
-        printf("setmask error\n");
-        return -1;
-    }
+    // 解除阻塞信号
+    sigprocmask(SIG_SETMASK, &prevSet, NULL);
 
     return 0;
 }

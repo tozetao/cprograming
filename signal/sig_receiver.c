@@ -58,6 +58,7 @@ int main(int argc, char const *argv[])
             exit(-1);
         }
 
+        // 阻塞信号后，在睡眠时间内发送不同的信号，查看标准信号是否有排队情况。
         printf("%s sleeping for %d\n", argv[0], numSecs);
         int index = 0;
         while (index < numSecs) {
@@ -97,7 +98,7 @@ int main(int argc, char const *argv[])
     // 显示已经接受的信号
     for (n = 1; n < NSIG; n++) {
         if (sigCount[n] != 0) {
-            printf("n = %d; signal = %d\n", n, sigCount[n]);
+            printf("signal = %d; count = %d\n", n, sigCount[n]);
             // printf("%s: signal %d caught %d time %s\n", argv[0], n, sigCount[n], (sigCount[n] == 1 ? ' ' : 's'));
         }
     }

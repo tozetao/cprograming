@@ -21,14 +21,8 @@ void printfSigset(const sigset_t *set)
 
 int main(int argc, char const *argv[])
 {
-    // int limit = sysconf(_SC_SIGQUEUE_MAX);
-    // printf("%d\n", limit);
-
-    printf("%d\n", SIGTSTP);
-    printf("%d\n", SIGQUIT);
-
-    printf("%d\n", SIGINT);
-    printf("%d\n", SIGTERM);
+    int limit = sysconf(_SC_SIGQUEUE_MAX);
+    printf("%d\n", limit);
 
     return 0;
 }
