@@ -2,6 +2,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 int main(int argc, char const *argv[])
 {
@@ -20,12 +21,12 @@ int main(int argc, char const *argv[])
     // 发送信号的次数
     numSigs = (argc > 4) ? atoi(argv[4]) : 1;
 
-    for(i=0; i < numSigs; i++) {
+    for(i = 1; i < numSigs; i++) {
         // 指定携带的数据
         sv.sival_int = sigData + i;
 
         if (sigqueue(pid, sig, sv) == -1) {
-            printf("sigqueue error\n");
+            printf("sigqueue error; errno = %d\n", errno);
             exit(-1);
         }
     }

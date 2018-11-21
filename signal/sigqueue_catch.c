@@ -15,31 +15,19 @@ static void siginfoHandler(int sig, siginfo_t *si, void *ucontext)
     if (sig == SIGINT || sig == SIGTERM) {
         allDone = 1;
         return;
+    } else  {
+        printf("signal = %d; value = %d\n", sig, si->si_value.sival_int);
     }
-
-    sigCnt++;
-
-    printf("caught signal: %d\n", sig);
-
-    printf("   si_signo = %d, si_code = %d (%s), ", si->si_signo, si->si_code, 
-        (si->si_code == SI_USER) ? "SI_USER" :
-        (si->si_code == SI_QUEUE) ? "SI_QUEUE" : "other");
-
-    printf("si_value = %d\n", si->si_value.sival_int);
-    printf("   si_pid = %ld, si_uid = %ld\n", (long)si->si_pid, (long)si->si_uid);
-
-    printf("   sigCnt = %d\n", sigCnt);
-    // sleep(handlerSleepTime);
 }
 
+
+// 1. 测试不阻塞情况下，相同信号是否以队列的方式来处理。
+// 2. 测试阻塞情况下，不同信号是否有按照信号值的升序来处理。
 int main(int argc, char const *argv[])
 {
     struct sigaction sa;
     int sig;
     sigset_t prevMask, blockMask;
-
-    // handlerSleepTime = (argc > 2) ? atoi(argv[]);
-    handlerSleepTime = 1;
 
     sa.sa_sigaction = siginfoHandler;
     sa.sa_flags = SA_SIGINFO;
@@ -47,17 +35,14 @@ int main(int argc, char const *argv[])
 
     // 注册信号处理器程序
     for(sig = 1; sig < NSIG; sig++) {
-        if (sig != SIGTSTP || sig != SIGQUIT) {
-            sigaction(sig, &sa, NULL);
-        }
+        sigaction(sig, &sa, NULL);
     }
 
-    //如果有传递1个参数，则进行睡眠
+    // 参数大于1表示要测试不同信号阻塞的情况
     if (argc > 1) {
         sigfillset(&blockMask);
-        sigdelset(&blockMask, SIGINT);
-        sigdelset(&blockMask, SIGTERM);
-
+        sigemptyset(&prevMask);
+        
         //阻塞信号
         if (sigprocmask(SIG_SETMASK, &blockMask, &prevMask) == -1) {
             printf("sigprocmask error\n");
@@ -78,7 +63,7 @@ int main(int argc, char const *argv[])
     while(!allDone) 
     {
         int p = pause();
-        printf("pause = %d\n", p);
+        printf("pause = %d; errno = %d; EINTR value = %d\n", p, errno, EINTR);
     }
 
     return 0;
