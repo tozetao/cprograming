@@ -10,11 +10,8 @@ void printf_error(char *content) {
 int main(int argc, char const *argv[])
 {
     int fd, flags;
-    char tmp[] = "/tmp/test.txt";
 
-    setbuf(stdout, NULL);
-    fd = mkdtemp(tmp);
-
+    fd = open("./test.log", O_RDWR | O_CREAT);
     printf("File offset before fork(): %lld\n", (long long)lseek(fd, 0, SEEK_CUR));
 
     flags = fcntl(fd, F_GETFL);
