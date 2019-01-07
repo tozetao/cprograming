@@ -21,23 +21,23 @@ int main() {
     }    
 
     char buffer[1024];
-    result = write(sock, "fuck", 5);
-    printf("result: %d\n", result);
-    if (result == -1) {
-        printf("write error");
-        exit(-1);
-    }
-    
-    int i;
-    for(i = 0; i<3; i++) {
-        result = write(sock, "cao", 4);
-        printf("result: %d\n", result);
-    
-        if (result == -1) {
-            printf("write error");
-            exit(-1);
-        }
-    }
+    //result = write(sock, "fuck", 5);
+    //printf("result: %d\n", result);
+    //if (result == -1) {
+    //    printf("write error");
+    //    exit(-1);
+    //}
+    //
+    //int i;
+    //for(i = 0; i<3; i++) {
+    //    result = write(sock, "cao", 4);
+    //    printf("result: %d\n", result);
+    //
+    //    if (result == -1) {
+    //        printf("write error");
+    //        exit(-1);
+    //    }
+    //}
    
     read(sock, buffer, 100);
     printf("read from server: %s\n", buffer);

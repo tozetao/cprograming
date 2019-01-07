@@ -36,21 +36,27 @@ int main()
     while(1) {
         clnt_sock = accept(sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
         printf("current clnt_sock: %d\n", clnt_sock);
+
+
+        write(clnt_sock, "hello", 6);
+        write(clnt_sock, "fuckyou", 8);
+        printf("%d\n", (int)sizeof("hello"));
         
-        sleep(5);
 
-        result = read(clnt_sock, &buffer, 100);
-        if (result == -1) {
-            printf("read error");
-            exit(-1);
-        }
-        printf("receive from client: %s\n", buffer);
-
-        result = write(clnt_sock, &buffer, sizeof(buffer));
-        if (result == -1) {
-            printf("write error");
-            exit(-1);
-        }
+//        sleep(5);
+//
+//        result = read(clnt_sock, &buffer, 100);
+//        if (result == -1) {
+//            printf("read error");
+//            exit(-1);
+//        }
+//        printf("receive from client: %s\n", buffer);
+//
+//        result = write(clnt_sock, &buffer, sizeof(buffer));
+//        if (result == -1) {
+//            printf("write error");
+//            exit(-1);
+//        }
 
         memset(&clnt_addr, 0, clnt_addr_size);
         close(clnt_sock);
