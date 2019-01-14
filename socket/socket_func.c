@@ -7,27 +7,10 @@
 #include <error.h>
 #include <unistd.h>
 
-//将网络字节序转换成IPv4地址
+#define SA struct sockaddr;
 
-//从socket中读取一定字节数据
-
-//int main()
-//{
-//    char *ip;
-//    struct sockaddr_in server_addr;
-//    memset(&server_addr, '0', sizeof(server_addr));
-//
-//    server_addr.sin_port = htons(8080);
-//    server_addr.sin_family = AF_INET;
-//    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-//    
-//    ip = sock_ntop((struct sockaddr*)&server_addr, sizeof(server_addr));
-//    printf("%s\n", ip);
-
-//    return 0;
-//}
-
-char *sock_ntop(const struct sockaddr *sa, socklen_t salen)
+//网络字节序转换成IPv4地址字符串
+char *sock_ntop(const struct sockaddr *sa)
 {
     char post_str[8];
     static char str[128];
@@ -42,7 +25,6 @@ char *sock_ntop(const struct sockaddr *sa, socklen_t salen)
             snprintf(post_str, sizeof(post_str), ":%d", ntohs(sin->sin_port));
             strcat(str, post_str);
         }
-        printf("str: %s; post_str: %s\n", str, post_str);
 
         return str;
     }
@@ -50,26 +32,49 @@ char *sock_ntop(const struct sockaddr *sa, socklen_t salen)
     return NULL;
 }
 
+//读取一定字节数据
 ssize_t readn(int fd, void *vpstr, size_t n)
 {
     size_t left = n;
-    ssize_t readSize;
+    ssize_t read_size;
     char *buffer;
 
     buffer = (char *)vpstr;
 
     while (left > 0) {
-        if ((readSize = read(fd, buffer, left)) < 0) {
+        if ((read_size = read(fd, buffer, left)) < 0) {
             if (errno == EINTR) 
-                readSize = 0;
+                read_size = 0;
             else
                 return -1;
-        } else if (readSize == 0){
+        } else if (read_size == 0){
             return 0;
         }
-        left = left - readSize;
-        buffer = buffer + readSize;
+        left = left - read_size;
+        buffer = buffer + read_size;
     }
 
     return n - left;
+}
+
+//向socket写入一定字节数据
+ssize_t written(int sock, void *vpstr, ssize_t size)
+{
+    size_t write_size;    
+    ssize_t left = size;
+    char *buffer = (char *)vpstr;
+    
+    while (left > 0) {
+        if ((write_size = write(sock, vpstr, left) <= 0)) {
+            if (write_size < 0 && errno == EINTR) {
+                write_size = 0;
+            } else {
+                return -1;
+            }
+        }
+        left -= write_size;
+        buffer += write_size;
+    }
+
+    return size - left;
 }

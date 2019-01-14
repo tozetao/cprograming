@@ -30,33 +30,19 @@ int main()
     struct sockaddr_in clnt_addr;
     socklen_t clnt_addr_size = sizeof(clnt_addr);
     int clnt_sock;
-    int result;
-    char buffer[1024];
+    char ip[10];
+    short port;
 
     while(1) {
         clnt_sock = accept(sock, (struct sockaddr*)&clnt_addr, &clnt_addr_size);
+        inet_ntop(AF_INET, &clnt_addr.sin_addr, ip, sizeof(ip));
+        port = ntohs(clnt_addr.sin_port);
+
         printf("current clnt_sock: %d\n", clnt_sock);
-
-
-        write(clnt_sock, "hello", 6);
-        write(clnt_sock, "fuckyou", 8);
-        printf("%d\n", (int)sizeof("hello"));
+        printf("connection from %s, port: %hd\n", ip, port);
         
-
-//        sleep(5);
-//
-//        result = read(clnt_sock, &buffer, 100);
-//        if (result == -1) {
-//            printf("read error");
-//            exit(-1);
-//        }
-//        printf("receive from client: %s\n", buffer);
-//
-//        result = write(clnt_sock, &buffer, sizeof(buffer));
-//        if (result == -1) {
-//            printf("write error");
-//            exit(-1);
-//        }
+        //响应客户端数据
+        write(clnt_sock, "hello", 6);
 
         memset(&clnt_addr, 0, clnt_addr_size);
         close(clnt_sock);
