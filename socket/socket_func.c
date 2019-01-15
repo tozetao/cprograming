@@ -7,7 +7,9 @@
 #include <error.h>
 #include <unistd.h>
 
-#define SA struct sockaddr;
+#define SA struct sockaddr
+#define MAXLINE 1024
+#define SERVE_PORT 9001
 
 //网络字节序转换成IPv4地址字符串
 char *sock_ntop(const struct sockaddr *sa)
@@ -77,4 +79,10 @@ ssize_t written(int sock, void *vpstr, ssize_t size)
     }
 
     return size - left;
+}
+
+void err_printf(char *str)
+{
+    printf("%s\n", str);
+    exit(-1);
 }

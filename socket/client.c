@@ -1,28 +1,24 @@
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include "socket_func.c"
 
-int main() {
-    int sock = socket(PF_INET, SOCK_STREAM, 0);
-    int result;
+void str_cli(FILE *fp, int sock)
+{
+    char sendline[MAXLINE];
 
-    struct sockaddr_in serv_addr;
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    serv_addr.sin_port = htons(9001);
-    serv_addr.sin_family = PF_INET;
+}
 
-    result = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    if (result == -1) {
-        printf("connect error");
-        exit(-1);
-    }    
+int main(int argc, char **argv)
+{
+    int sockfd;
+    struct sockaddr_in serve_addr;
 
-    char buffer[1024];
-   
-    read(sock, buffer, 100);
-    printf("read from server: %s\n", buffer);
+    bzero(&serve_addr, sizeof(serve_addr));
+    serve_addr.sin_port = htons(9001);
+    serve_addr.sin_family = AF_INET;
+    inet_pton(AF_INET, argv[1], &serve_addr.sin_addr);
 
-    close(sock);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    connect(sockfd, (SA*) &serve_addr, sizeof(serve_addr));
 
-    return 0;
+    str_cli(stdin, sockfd);
+    exit(0);
 }
