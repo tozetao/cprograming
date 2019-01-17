@@ -94,6 +94,8 @@ again:
 }
 
 //读取max个字节数据，如果碰到换行符或者EOF则停止读取
+//readline是从read_buffer中读取数据的，碰到换行符则停止读取，下次调用继续从read_buffer中读取数据，
+//这里有个问题，如果read_buffer读取的数据不干净，那么myread会从read_buffer中继续向后读取数据，这时候就会出错.
 ssize_t readline(int fd, void *buffer, ssize_t max)
 {
     ssize_t i, cnt = 0;
@@ -114,6 +116,7 @@ ssize_t readline(int fd, void *buffer, ssize_t max)
     }
 
     *pstr = 0;
+    read_cnt = 0;
     return i;
 }
 

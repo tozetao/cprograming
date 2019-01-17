@@ -2,6 +2,7 @@
 
 void str_cli(FILE *fp, int sock)
 {
+    ssize_t n;
     char sendline[MAXLINE], recvline[MAXLINE];
     
     while (fgets(sendline, MAXLINE, fp) != NULL) {
@@ -10,11 +11,10 @@ void str_cli(FILE *fp, int sock)
             exit(-1);
         }
 
-        if (readline(sock, recvline, MAXLINE) <= 0) {
+        if ((n = readline(sock, recvline, MAXLINE)) <= 0) {
             printf("%s\n", "readline error");
             exit(-1);
         }
-
         fputs(recvline, stdout);
     }
 }

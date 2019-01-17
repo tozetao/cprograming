@@ -2,20 +2,22 @@
 
 void str_echo(int sock) {
     ssize_t n;
-    char buffer[MAXLINE];
 
+    //buffer是重复写的，因此除了接收客户端的数据外，也可能包含上一次接收未被覆盖到的数据，
+    //所以输出内容的时候会产生多余的内容或乱码
+    char buffer[MAXLINE];
+    
     again:
         while((n = read(sock, buffer, MAXLINE)) > 0) {
             printf("read %d bytes from client\n", (int)n);
             written(sock, buffer, MAXLINE);
         }
-        printf("tag: %d\n", (int)n);
+        printf("read end: %d\n", (int)n);
 
         if (n < 0 && errno == EINTR)
             goto again;
         else if (n < 0) {
             printf("%s\n", "str_echo error");
-            exit(-1);
         }
 }
 
@@ -31,8 +33,8 @@ int main()
     serve_sock =  socket(AF_INET, SOCK_STREAM, 0);
 
     //绑定协议族
-    //serve_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serve_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serve_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    //serve_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     serve_addr.sin_family = AF_INET;
     serve_addr.sin_port = htons(SERVE_PORT);
     bind(serve_sock, (SA *)&serve_addr, sizeof(serve_addr));
