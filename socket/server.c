@@ -1,4 +1,7 @@
 #include "socket_func.c"
+//#include "sigfunc.c"
+#include <signal.h>
+#include <wait.h>
 
 void str_echo(int sock) {
     ssize_t n;
@@ -21,6 +24,23 @@ void str_echo(int sock) {
         }
 }
 
+void sig_child(int signo)
+{
+    pid_t pid;
+    int stat;
+    
+    pid = wait(&stat);
+    
+    printf("pid = %d, stat = %d, signo = %d\n", pid, stat, signo);
+    return;
+}
+
+void sig_int(int signo)
+{
+    printf("signo %d\n", signo);
+    return;
+}
+
 int main() 
 {
     int serve_sock, clnt_sock, pid, clnt_addr_size;
@@ -41,6 +61,14 @@ int main()
 
     //开始监听
     listen(serve_sock, 100);
+
+    //注册信号处理函数
+    if (signal(SIGCHLD, sig_child) == SIG_ERR) {
+        printf("%s\n", "signal error");
+        exit(-1);
+    }
+
+    signal(SIGINT, sig_int);
 
     //处理请求
     while(1) {
