@@ -6,38 +6,45 @@
 #include <string.h>
 #include <strings.h>
 #include <signal.h>
+#include <errno.h>
 
 void sig_child(int signo)
 {
-    printf("signo %d", signo);
+    printf("signo %d\n", signo);
+    return;
 }
 
 int main()
 {
-    char buffer[1024];
-    char *p;
-    int fd, count;
+//    char buffer[1024];
+//    char *p;
+//    int fd, count;
+//
+//    bzero(buffer, sizeof(buffer));
+//    
+//    p = buffer;
+//
+//    *p++ = 'a';
+//    *p++ = 'b';
+//    *p++ = 'c';
+//    *p++ = 'd';
+//    printf("%s\n", buffer);
+//    printf("%d\n", SIGCHLD);
+//    printf("%d\n", EINTR);
 
-    bzero(buffer, sizeof(buffer));
-    
-    p = buffer;
-
-    *p++ = 'a';
-    *p++ = 'b';
-    *p++ = 'c';
-    *p++ = 'd';
-    printf("%s\n", buffer);
-    printf("%d\n", SIGCHLD);
-
-    
-    signal(SIGCHLD, sig_child);
     pid_t pid;
+    signal(SIGCHLD, sig_child);
     if ((pid = fork()) == 0){
-        sleep(10);
-        printf("%s", "the process is parent\n");
-    } else {
-        printf("child process pid is %d\n", pid);
+        printf("child process pid is %d\n", getpid());
         exit(0);
+    } else {
+        int i = 0;
+        while (i < 10) {
+            sleep(1);
+            i++;
+        }
+        printf("the process is parent, child process is %d\n", pid);
+        printf("errno %d\n", errno);
     }
 
 

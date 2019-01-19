@@ -1,5 +1,5 @@
 #include "socket_func.c"
-//#include "sigfunc.c"
+
 #include <signal.h>
 #include <wait.h>
 
@@ -29,15 +29,10 @@ void sig_child(int signo)
     pid_t pid;
     int stat;
     
-    pid = wait(&stat);
-    
-    printf("pid = %d, stat = %d, signo = %d\n", pid, stat, signo);
-    return;
-}
-
-void sig_int(int signo)
-{
-    printf("signo %d\n", signo);
+    //pid = wait(&stat);
+    while (waitpid(-1, &stat, WNOHANG) > 0) {    
+        printf("pid = %d, stat = %d, signo = %d\n", pid, stat, signo);
+    }
     return;
 }
 
@@ -59,35 +54,39 @@ int main()
     serve_addr.sin_port = htons(SERVE_PORT);
     bind(serve_sock, (SA *)&serve_addr, sizeof(serve_addr));
 
+    //注册信号处理函数
+    signal(SIGCHLD, sig_child);
+
     //开始监听
     listen(serve_sock, 100);
-
-    //注册信号处理函数
-    if (signal(SIGCHLD, sig_child) == SIG_ERR) {
-        printf("%s\n", "signal error");
-        exit(-1);
-    }
-
-    signal(SIGINT, sig_int);
 
     //处理请求
     while(1) {
         clnt_addr_size = sizeof(clnt_addr);
-        clnt_sock = accept(serve_sock, (SA *)&clnt_addr, &clnt_addr_size);
-        printf("client socket %d\n", clnt_sock);
 
-        if ((pid = fork()) != 0) {
-            printf("child process id = %d, then doing something\n", pid);
+        printf("start accept...\n");
+        clnt_sock = accept(serve_sock, (SA *)&clnt_addr, &clnt_addr_size);
+        printf("clnt_sock: %d, errno: %d, EINTR=%d\n", clnt_sock, errno, EINTR);
+        if (clnt_sock < 0) {
+            if (errno == EINTR) {
+                continue;
+            } else {
+                printf("accept error\n");
+                exit(-1);
+            }
+        }
+
+        if ((pid = fork()) == 0) {
             //子进程处理客户端连接
             str_echo(clnt_sock);
 
-            printf("%s; clnt_sock = %d\n", "close clnt_sock on child", clnt_sock);           
+            printf("I am child; close clnt_sock on child; clnt_sock = %d\n", clnt_sock);           
             close(serve_sock);
             close(clnt_sock);
             exit(0);
-        } else {
-            printf("%s; clnt_sock = %d\n", "close clnt_sock on parent", clnt_sock);
-            close(clnt_sock);
-        }
+        } 
+
+        printf("I am parent, child pid is %d; clnt_sock is %d\n", pid, clnt_sock);
+        close(clnt_sock);
     }
 }
