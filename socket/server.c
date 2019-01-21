@@ -11,9 +11,9 @@ void str_echo(int sock) {
     char buffer[MAXLINE];
     
     again:
-        while((n = read(sock, buffer, MAXLINE)) > 0) {
+        while((n = readline(sock, buffer, MAXLINE)) > 0) {
             printf("read %d bytes from client\n", (int)n);
-            written(sock, buffer, MAXLINE);
+            written(sock, buffer, n);
         }
         printf("read end: %d\n", (int)n);
 
@@ -24,13 +24,36 @@ void str_echo(int sock) {
         }
 }
 
+void str_echo_num(int sock)
+{
+    char buffer[MAXLINE];
+    ssize_t n;
+    long arg1, arg2;
+
+again:
+    while ((n = readline(sock, buffer, MAXLINE)) > 0 ) {
+        printf("read %ld bytes from client\n", n);
+        
+        if (sscanf(buffer, "%ld %ld", &arg1, &arg2) == 2) {
+            snprintf(buffer, sizeof(buffer), "%ld\n", arg1 + arg2);
+        } else {
+            snprintf(buffer, sizeof(buffer), "%s\n", "input error");
+        }
+        written(sock, buffer, strlen(buffer));
+    }
+
+    if (n < 0 && errno == EINTR)
+        goto again;
+    else if (n < 0)
+        printf("echo error\n");
+}
+
 void sig_child(int signo)
 {
     pid_t pid;
     int stat;
     
-    //pid = wait(&stat);
-    while (waitpid(-1, &stat, WNOHANG) > 0) {    
+    while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {    
         printf("pid = %d, stat = %d, signo = %d\n", pid, stat, signo);
     }
     return;
@@ -78,7 +101,8 @@ int main()
 
         if ((pid = fork()) == 0) {
             //子进程处理客户端连接
-            str_echo(clnt_sock);
+            //str_echo(clnt_sock);
+            str_echo_num(clnt_sock);
 
             printf("I am child; close clnt_sock on child; clnt_sock = %d\n", clnt_sock);           
             close(serve_sock);

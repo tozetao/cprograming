@@ -14,38 +14,67 @@ void sig_child(int signo)
     return;
 }
 
+void test_snprintf()
+{
+    char line[100];
+    int i;
+
+    i = snprintf(line, sizeof(line), "%012dend number", 12345);
+    printf("%s\n", line);
+    printf("i = %d; line = %s; size = %ld\n", i, line, sizeof(line));
+}
+
+void test_sscanf()
+{
+    char line[100] = "100 912";
+    long arg1, arg2;
+    int r;
+
+    r = sscanf(line, "%ld %ld", &arg1, &arg2);
+    printf("arg1 = %ld, arg2 = %ld, r = %d\n", arg1, arg2, r);
+}
+
+void test_signo()
+{
+//    pid_t pid;
+//    signal(SIGCHLD, sig_child);
+//    if ((pid = fork()) == 0){
+//        printf("child process pid is %d\n", getpid());
+//        exit(0);
+//    } else {
+//        int i = 0;
+//        while (i < 10) {
+//            sleep(1);
+//            i++;
+//        }
+//        printf("the process is parent, child process is %d\n", pid);
+//        printf("errno %d\n", errno);
+//    }
+}
+
+void test_buffer()
+{
+    char buffer[1024];
+    char *p;
+
+    bzero(buffer, sizeof(buffer));
+    
+    printf("sizeof = %ld, length = %ld\n", sizeof(buffer), strlen(buffer));
+    
+    p = buffer;
+
+    *p++ = 'a';
+    *p++ = 'b';
+    *p++ = 'c';
+    *p++ = 'd';
+}
+
 int main()
 {
-//    char buffer[1024];
-//    char *p;
-//    int fd, count;
-//
-//    bzero(buffer, sizeof(buffer));
-//    
-//    p = buffer;
-//
-//    *p++ = 'a';
-//    *p++ = 'b';
-//    *p++ = 'c';
-//    *p++ = 'd';
-//    printf("%s\n", buffer);
-//    printf("%d\n", SIGCHLD);
-//    printf("%d\n", EINTR);
+    //test_snprintf();
+    test_sscanf();
+    //test_buffer();
 
-    pid_t pid;
-    signal(SIGCHLD, sig_child);
-    if ((pid = fork()) == 0){
-        printf("child process pid is %d\n", getpid());
-        exit(0);
-    } else {
-        int i = 0;
-        while (i < 10) {
-            sleep(1);
-            i++;
-        }
-        printf("the process is parent, child process is %d\n", pid);
-        printf("errno %d\n", errno);
-    }
 
 
 //    fd = open("test.log", O_RDWR);

@@ -66,6 +66,7 @@ ssize_t written(int sock, void *vpstr, ssize_t size)
         left -= write_size;
         buffer += write_size;
     }
+
     return size - left;
 }
 
@@ -75,6 +76,7 @@ static char read_buffer[MAXLINE];
 //先把数据读取到静态缓冲区中，然后依次从该缓冲区中取出字节数据
 ssize_t myread(int fd, char *c)
 {
+    //printf("read_cnt=%d\n", read_cnt);
     if (read_cnt <= 0) {
 again:
         if ((read_cnt = read(fd, read_buffer, sizeof(read_buffer))) < 0) {
@@ -87,7 +89,7 @@ again:
 
         read_point = read_buffer;
     }
-
+    
     read_cnt--;
     *c = *read_point++;
     return 1;
@@ -105,6 +107,7 @@ ssize_t readline(int fd, void *buffer, ssize_t max)
     for (i=0; i < max; i++) {
         if ((cnt = myread(fd, &c)) == 1) {
             *pstr++ = c;
+            //printf("%c", c);
             if (c == '\n')
                 break;
         } else if (cnt == 0) {
@@ -114,10 +117,11 @@ ssize_t readline(int fd, void *buffer, ssize_t max)
             return -1;  //error
         }
     }
+    //printf("max=%d, i=%d\n", (int)max, (int)i);
 
     *pstr = 0;
     read_cnt = 0;
-    return i;
+    return i+1;
 }
 
 void err_printf(char str[])
