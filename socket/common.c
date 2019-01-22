@@ -10,3 +10,5 @@
 #define SA struct sockaddr
 #define MAXLINE 1024
 #define SERVE_PORT 9001
+
+#define max(a, b) ((a) > (b) ? (a) : (b))

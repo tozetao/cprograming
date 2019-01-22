@@ -1,4 +1,6 @@
 #include "socket_func.c"
+#include "sum.h"
+
 #include <signal.h>
 
 void str_cli(FILE *fp, int sock)
@@ -48,16 +50,17 @@ void sig_pipe(int signo)
     return;
 }
 
-int main(int argc, char **argv)
+int main()
 {
     int sockfd;
+    char ip[] = "127.0.0.1";
     struct sockaddr_in serve_addr;
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     bzero(&serve_addr, sizeof(serve_addr));
     serve_addr.sin_port = htons(SERVE_PORT);
     serve_addr.sin_family = AF_INET;
-    inet_pton(AF_INET, argv[1], &serve_addr.sin_addr);
+    inet_pton(AF_INET, ip, &serve_addr.sin_addr);
    
     signal(SIGPIPE, sig_pipe);
 
@@ -66,8 +69,9 @@ int main(int argc, char **argv)
         exit(-1);
     }
    
-    str_cli(stdin, sockfd);
+    //str_cli(stdin, sockfd);
     //str_cli_pipe(stdin, sockfd);
+    number_cli(stdin, sockfd);
 
     exit(0);
 }

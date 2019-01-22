@@ -69,13 +69,21 @@ void test_buffer()
     *p++ = 'd';
 }
 
+struct args {
+    long arg1;
+    long arg2;
+};
+
 int main()
 {
     //test_snprintf();
-    test_sscanf();
+    //test_sscanf();
     //test_buffer();
 
-
+    //struct args a1;
+    //printf("%ld", sizeof(a1));
+    int n = fileno(stdin);
+    printf("%d", n);
 
 //    fd = open("test.log", O_RDWR);
 //    count = read(fd, buffer, 100);
