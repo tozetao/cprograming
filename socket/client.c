@@ -69,9 +69,9 @@ int main()
         exit(-1);
     }
    
-    //str_cli(stdin, sockfd);
+    str_cli(stdin, sockfd);
     //str_cli_pipe(stdin, sockfd);
-    number_cli(stdin, sockfd);
+    //number_cli(stdin, sockfd);
 
     exit(0);
 }

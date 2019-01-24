@@ -4,66 +4,13 @@
 #include <signal.h>
 #include <wait.h>
 
-void str_echo(int sock) {
-    ssize_t n;
-
-    //buffer是重复写的，因此除了接收客户端的数据外，也可能包含上一次接收未被覆盖到的数据，
-    //所以输出内容的时候会产生多余的内容或乱码
-    char buffer[MAXLINE];
-    
-    again:
-        while((n = readline(sock, buffer, MAXLINE)) > 0) {
-            printf("read %d bytes from client\n", (int)n);
-            written(sock, buffer, n);
-        }
-        printf("read end: %d\n", (int)n);
-
-        if (n < 0 && errno == EINTR)
-            goto again;
-        else if (n < 0) {
-            printf("%s\n", "str_echo error");
-        }
-}
-
-void str_echo_num(int sock)
-{
-    char buffer[MAXLINE];
-    ssize_t n;
-    long arg1, arg2;
-
-again:
-    while ((n = readline(sock, buffer, MAXLINE)) > 0 ) {
-        printf("read %ld bytes from client\n", n);
-        
-        if (sscanf(buffer, "%ld %ld", &arg1, &arg2) == 2) {
-            snprintf(buffer, sizeof(buffer), "%ld\n", arg1 + arg2);
-        } else {
-            snprintf(buffer, sizeof(buffer), "%s\n", "input error");
-        }
-        written(sock, buffer, strlen(buffer));
-    }
-
-    if (n < 0 && errno == EINTR)
-        goto again;
-    else if (n < 0)
-        printf("echo error\n");
-}
-
-void sig_child(int signo)
-{
-    pid_t pid;
-    int stat;
-    
-    while ((pid = waitpid(-1, &stat, WNOHANG)) > 0) {    
-        printf("pid = %d, stat = %d, signo = %d\n", pid, stat, signo);
-    }
-    return;
-}
-
 int main() 
 {
     int serve_sock, clnt_sock, pid, clnt_addr_size;
     struct sockaddr_in serve_addr, clnt_addr;
+
+    fd_set rset, allset;
+    int client[FD_SETSIZE], i, maxi, maxfd, nready;
 
     bzero(&serve_addr, sizeof(serve_addr));
     bzero(&clnt_addr, sizeof(clnt_addr));
@@ -78,41 +25,84 @@ int main()
     serve_addr.sin_port = htons(SERVE_PORT);
     bind(serve_sock, (SA *)&serve_addr, sizeof(serve_addr));
 
-    //注册信号处理函数
-    signal(SIGCHLD, sig_child);
+    //初始化FDSET、client
+    for (i = 0; i < FD_SETSIZE; i++)
+        client[i] = -1;
+
+    FD_ZERO(&allset);
+    maxfd = serve_sock;
+    maxi = 0;
+
+    FD_SET(serve_sock, &allset);
 
     //开始监听
     listen(serve_sock, 100);
 
     //处理请求
     while(1) {
-        clnt_addr_size = sizeof(clnt_addr);
+        sleep(1);
+        // 监听socket描述符是否就绪
+        rset = allset;        
+        printf("select waitting...\n");
+        nready = select(maxfd + 1, &rset, NULL, NULL, NULL);
+        printf("nready = %d\n", nready);
 
-        printf("start accept...\n");
-        clnt_sock = accept(serve_sock, (SA *)&clnt_addr, &clnt_addr_size);
-        printf("clnt_sock: %d, errno: %d, EINTR=%d\n", clnt_sock, errno, EINTR);
-        if (clnt_sock < 0) {
-            if (errno == EINTR) {
-                continue;
-            } else {
-                printf("accept error\n");
-                exit(-1);
+        // 如果是监听描述符变为可读，表示有新的连接建立
+        if (FD_ISSET(serve_sock, &rset)) {
+            printf("connection process\n");
+
+            clnt_addr_size = sizeof(clnt_addr);
+            clnt_sock = accept(serve_sock, (SA *)&clnt_addr, &clnt_addr_size);
+
+            // 记录新的连接描述符
+            for(i = 0; i < FD_SETSIZE; i++) {
+                if (client[i] == -1) {
+                    client[i] = clnt_sock;
+                    break;
+                }
             }
+
+            // 加入到监听集合中
+            FD_SET(clnt_sock, &allset);
+
+            if (i > maxi)
+                maxi = i;
+
+            if (clnt_sock > maxfd)
+                maxfd = clnt_sock;
+            
+            printf("maxi = %d; maxfd = %d\n", maxi, maxfd);
+
+            // 判断是否有可读的连接描述符要处理
+            if (--nready <= 0)
+                continue;
         }
 
-        if ((pid = fork()) == 0) {
-            //子进程处理客户端连接
-            //str_echo(clnt_sock);
-            //str_echo_num(clnt_sock);
-            number_echo(clnt_sock);
+        int n = 0;
+        char buffer[MAXLINE];
 
-            printf("I am child; close clnt_sock on child; clnt_sock = %d\n", clnt_sock);           
-            close(serve_sock);
-            close(clnt_sock);
-            exit(0);
-        } 
+        // 处理可读的连接描述符
+        for (i = 0; i <= maxi; i++) {
+            if ((clnt_sock = client[i]) == -1)
+                continue;
 
-        printf("I am parent, child pid is %d; clnt_sock is %d\n", pid, clnt_sock);
-        close(clnt_sock);
+            printf("clnt_sock %d process\n", clnt_sock);
+
+            if (FD_ISSET(clnt_sock, &rset)) {
+                if ((n = read(clnt_sock, buffer, MAXLINE)) == 0) {
+                    close(clnt_sock);
+                    FD_CLR(clnt_sock, &allset);
+                    client[i] = -1;
+                    printf("close clnt_sock = %d\n", clnt_sock);
+                } else {
+                    printf("read %d bytes from client\n", n);
+                    written(clnt_sock, buffer, n); 
+                }
+            }
+
+            //if (--nready <= 0)
+            //    break;
+        }
+
     }
 }
