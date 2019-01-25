@@ -98,10 +98,10 @@ int main()
                     printf("read %d bytes from client\n", n);
                     written(clnt_sock, buffer, n); 
                 }
-            }
 
-            //if (--nready <= 0)
-            //    break;
+                if (--nready <= 0)
+                    break;
+            }
         }
 
     }
