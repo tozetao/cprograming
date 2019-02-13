@@ -60,6 +60,7 @@ int main()
         exit(-1);
     }
    
+    str_cli(stdin, sockfd);
 
     exit(0);
 }

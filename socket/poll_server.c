@@ -47,6 +47,7 @@ int main()
     while(1) {
         // 开始监听socket描述符
         nready = poll(client, maxi + 1, -1);
+        printf("nready = %d\n", nready);
 
         // 处理新的连接
         if (client[0].revents & POLLRDNORM) {
@@ -78,8 +79,10 @@ int main()
 
         // 处理就绪的socket描述符
         for(i = 1; i <= maxi; i++) {
+            printf("client[%d].revents = %d; result = %d; val = %d\n", i, client[i].revents, client[i].revents & (POLLRDNORM | POLLERR), POLLRDNORM | POLLERR);
+
             if (client[i].revents & (POLLRDNORM | POLLERR)) {
-                if ((n = read(client[i].fd, buffer, MAXLINE) < 0)) {
+                if ((n = read(client[i].fd, buffer, MAXLINE)) < 0) {
                     if (errno == ECONNRESET) {
                         close(client[i].fd);
                         client[i].fd = -1;
