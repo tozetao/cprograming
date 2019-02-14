@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <error.h>
 #include <unistd.h>
+#include <assert.h>
 
 #define SA struct sockaddr
 #define MAXLINE 1024

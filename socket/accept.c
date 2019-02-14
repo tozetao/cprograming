@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 static short stop = 0;
 
@@ -41,11 +42,26 @@ int main()
     ret = listen(sockfd, backlog);
     assert(ret != -1);
 
-    while (!stop)
+    // 测试客户端连接全部断线情况下，accept是否能正常运行
+    int i;
+    for(i = 0; i<20; i++) {
+        printf("sleep %d\n", i+1);
         sleep(1);
+    }
+
+    struct sockaddr_in client;
+    socklen_t client_length = sizeof(client);
+    int connfd = accept(sockfd, (struct sockaddr *)&client, &client_length);
+
+    if (connfd < 0){
+        printf("error is %d\n", errno);
+    } else {
+        char remote[INET_ADDRSTRLEN];
+        printf("connection ip: %s, port: %d\n", inet_ntop(AF_INET, &client.sin_addr, remote, INET_ADDRSTRLEN), ntohs(client.sin_port));
+        close(connfd);
+    }
 
     close(sockfd);
-
     return 0;
 }
 
