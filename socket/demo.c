@@ -82,8 +82,6 @@ int main()
 
     //struct args a1;
     //printf("%ld", sizeof(a1));
-    int n = fileno(stdin);
-    printf("%d", n);
 
 //    fd = open("test.log", O_RDWR);
 //    count = read(fd, buffer, 100);
@@ -98,6 +96,12 @@ int main()
 //        printf("%d\n", (int)strlen(buffer));
 //        fputs(buffer, stdout);
 //    }
+    char buffer[1024];
+
+    ssize_t n;
+
+    n = read(STDIN_FILENO, buffer, 0);
+    printf("%ld\n", n);
 
     return 0;
 }
