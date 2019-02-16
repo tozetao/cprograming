@@ -1,0 +1,6 @@
+https://github.com/fholgado/minibufexpl.vim/blob/master/doc/minibufexpl.txt
+
+
+https://www.cnblogs.com/liangjiongyao/p/9965927.html
+http://www.cnblogs.com/zhongcq/p/3615980.html
+https://zoujiemeng.github.io/post/2017/03/ubuntu-16.04-vim.html

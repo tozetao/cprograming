@@ -21,6 +21,16 @@ void example1()
     }
 }
 
+void test()
+{
+    char *name;
+    int age;
+    
+    for(int i = 0; i < 10; i++) {
+        printf("hello\n");
+    }
+}
+
 void example2()
 {
     char const *keyTables[] = {
