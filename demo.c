@@ -36,11 +36,6 @@ void example2()
 
     val = val + 2;
     printf("%s\n", *val);
-    printf("%c\n", *(*val + 2));
-
-    // for(val = keyTables; *val != NULL; val++) {
-    //     printf("%c\n", **val);
-    // }
 
     /*
     int printf(char const *format, ...);
