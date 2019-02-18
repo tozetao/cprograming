@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <arpa/inet.h>
 
 void example1()
 {
@@ -18,16 +17,6 @@ void example1()
     printf("%d\n", length);
     for(i = 0; i < length; i++ ){
         printf("%s\n", keyTables[i]);
-    }
-}
-
-void test()
-{
-    char *name;
-    int age;
-    
-    for(int i = 0; i < 10; i++) {
-        printf("hello\n");
     }
 }
 
@@ -60,27 +49,8 @@ void example2()
     */
 }
 
-int main()
+int main(int argc, char const *argv[])
 {
-//    struct in_addr in;
-//    in.s_addr = inet_addr("192.168.2.11");
-//    printf("%d\n", in.s_addr);
-//    
-//    char *val1 = inet_ntoa(in);
-//    printf("%s\n", val1);
-//
-//    struct sockaddr_in server_addr;
-//    printf("%ld, %d\n", sizeof(server_addr), INET6_ADDRSTRLEN);
-
-    char buf[16];
-    struct in_addr s;
-    int r;
-
-    r = inet_pton(AF_INET, "21.152.33.12", (void *)&s);
-    printf("r = %d, %d\n", r, s.s_addr);
-    
-    inet_ntop(AF_INET, (void *)&s, buf, INET_ADDRSTRLEN);
-    printf("ip: %s\n", buf);
-
+    example2();
     return 0;
 }
