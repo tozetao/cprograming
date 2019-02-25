@@ -1,38 +1,6 @@
 #include "socket_func.c"
 #include <pthread.h>
 
-
-void str_cli(FILE *file, int sockfd)
-{
-    int maxfd;
-    fd_set rset;
-    char sendline[MAXLINE], recvline[MAXLINE];
-
-    FD_ZERO(&rset);
-    
-    while (1) {
-        FD_SET(fileno(file), &rset);
-        FD_SET(sockfd, &rset);
-
-        maxfd = max(fileno(file), sockfd) + 1;
-        select(maxfd, &rset, NULL, NULL, NULL);
-
-        if (FD_ISSET(sockfd, &rset)) {
-            if (readline(sockfd, recvline, MAXLINE) == 0) 
-                printf("str_cli: server is prematurely terminated\n");
-            else
-                fputs(recvline, stdout);
-        }
-
-        if (FD_ISSET(fileno(file), &rset)) {
-            if (fgets(sendline, MAXLINE, file) == NULL)
-                return;
-
-            written(sockfd, sendline, strlen(sendline));
-        }
-    }
-}
-
 static int sockfd;
 static FILE *fp;
 
@@ -47,7 +15,10 @@ void thread_str_cli(FILE *fp_arg, int sockfd_arg)
     sockfd = sockfd_arg;
     fp = fp_arg;
 
+    // 创建子线程，执行copyto
     pthread_create(&tid, NULL, copyto, NULL);
+    
+    // 读取socket数据并输出
     while (readline(sockfd, recvline, MAXLINE) > 0)
         fputs(recvline, stdout);
 }
