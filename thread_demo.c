@@ -22,10 +22,9 @@ int main()
         25
     };
 
-    printf("this is my demo");
-
     pthread_t tid;
     pthread_create(&tid, NULL, test, &user);
+
     sleep(2);
 
     return 0;

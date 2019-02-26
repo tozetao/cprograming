@@ -1,6 +1,5 @@
-#include <pthread.h>
-#include <malloc.h>
 #include "socket_func.c"
+#include "thread_readline.c"
 
 static void *doit(void *);  /* echo thread executes this function */
 void str_echo(int sockfd);  /* echo string to client */
@@ -52,10 +51,10 @@ void str_echo(int socket)
 {
     // 一直读取数据，直到客户端主动关闭连接
     int n;
-    int buffer[MAXLINE];
+    char buffer[MAXLINE];
 
 again:
-    while ((n = readline(socket, buffer, MAXLINE)) > 0) {
+    while ((n = thread_readline(socket, buffer, MAXLINE)) > 0) {
         printf("read %d bytes from client\n", n);
         written(socket, buffer, n);
     }

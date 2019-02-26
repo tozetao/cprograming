@@ -7,6 +7,8 @@
 #include <error.h>
 #include <unistd.h>
 #include <assert.h>
+#include <pthread.h>
+#include <malloc.h>
 
 #define SA struct sockaddr
 #define MAXLINE 1024
