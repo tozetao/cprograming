@@ -1,5 +1,6 @@
 #include "socket_func.c"
 #include <netdb.h>
+#include <fcntl.h>
 
 #define SERV "80"
 #define MAXFILES 20
@@ -29,7 +30,7 @@ struct addrinfo *host_serv(const char *, const char *, int, int);
 // web 3 127.0.0.1 file....
 int main(int argc, char **argv)
 {
-    int i, n, , fd, maxnconn, flags, error;
+    int i, n, fd, maxnconn, flags, error;
     char buf[MAXLINE];
     fd_set rs, ws;
 
@@ -57,11 +58,80 @@ int main(int argc, char **argv)
     FD_ZERO(&wset);
     maxfd = -1;
 
-    // nlefttoread是仍需读取的文件数，当到达0时程序任务完成
     // nlefttoconn是尚无TCP连接的文件数
     // nconn是当前打开着的连接数
+    // maxnconn是最大并发数
     nlefttoread = nlefttoconn = nfiles;
     nconn = 0;
+
+    /* 
+        nlefttoread是仍需读取的文件数，初始时等于要读取的文件个数，
+        当到达0时程序任务完成
+        select每次处理好一个文件，则会减1
+    */
+    while (nlefttoread > 0) {
+        // 如果没有到达最大并行连接数，而且还有连接需要建立，那就找到一个未处理的文件，f_flags=0的文件
+        // 然后调用start_connect另发起一个连接
+        
+        // nconn和maxnconn俩个变量控制并发数，nlefttoconn控制是否要开始一个连接。
+        while (nconn < maxnconn && nlefttoconn > 0) {
+            for (i = 0; i < nfiles; i++) 
+                if (file[0].f_flags == 0)
+                    break;
+
+            // 所有文件都处理完毕
+            if (i == nfiles) {
+                printf("nlefttoconn = %d but nothing found\n", nlefttoconn);
+                sleep(5);
+                exit(-1);
+            }
+
+            start_connect(&file[i]);
+            // 当前连接数加1
+            nconn++;
+            // 尚无建立TCP连接的文件数-1
+            nlefttoconn--;
+        }
+
+        rs = rset;
+        ws = wset;
+        n = select(maxfd + 1, &rs, &ws, NULL, NULL);
+
+        // 处理I/O事件
+        for (i = 0; i < nfiles; i++) {
+            flags = file[i].f_flags;
+            if (flags == 0 || flags & F_DONE)
+                continue;
+
+            fd = file[i].f_fd;
+            
+            // 处理刚建立连接的文件
+            if (flags & F_CONNECTION && (FD_ISSET(fd, &rs) || FD_ISSET(fd, &ws))) {
+                n = sizeof(error);
+
+                if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &n) < 0 || error != 0) {
+                    printf("nonblocking connect failed for %s", file[i].f_name);
+                    exit(-1);
+                }
+
+                printf("connection established for %s\n", file[i].f_name);
+                FD_CLR(fd, &wset);
+                write_get_cmd(&file[i]);
+            } else if (flags & F_READING && FD_ISSET(fd, &rs)) {
+                // 连接建立成功，处理服务器相应数据
+                if ((n = read(fd, buf, sizeof(buf))) == 0) {
+                    printf("end-of-file on %s\n", file[i].f_name);
+                    close(fd);
+                    file[i].f_flags = F_DONE;
+                    FD_CLR(fd, &rset);
+                    nconn--;
+                    nlefttoread--;
+                } else {
+                    printf("read %d bytes from %s\n", n, file[i].f_name);
+                }
+            }
+        }
+    }
 
     return 0;
 }
@@ -87,17 +157,57 @@ void home_page(const char *host, const char *fname)
     close(fd);
 }
 
+// 建立一个连接
 void start_connect(struct file *fptr)
 {
     int fd, flags, n;
     struct addrinfo *ai;
 
     ai = host_serv(fptr->f_host, SERV, 0, SOCK_STREAM);
+    
     fd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-
+    fptr->f_fd = fd;
     printf("start_connect for %s, fd %d\n", fptr->f_name, fd);
 
-    flags = fcntl();
+    flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+    // 非阻塞下会直接返回一个错误
+    if ((n = connect(fd, ai->ai_addr, ai->ai_addrlen)) < 0) 
+    {
+        if (errno != EINPROGRESS) {
+            printf("nonblocking connect error\n");
+            exit(-1);
+        }
+        // 将该文件结构标志设置连接中，然后监听描述符的I/O事件
+        fptr->f_flags = F_CONNECTION;
+        FD_SET(fd, &rset);
+        FD_SET(fd, &wset);
+
+        if (fd > maxfd)
+            maxfd = fd;
+    } else if (n >= 0)
+        // 在局域网下，RTT的时间非常短暂，尽快描述符设置了非阻塞，然而也可能立即建立成功
+        // 因此要处理连接成功的情况
+        write_get_cmd(fptr);
+}
+
+void write_get_cmd(struct file *fptr)
+{
+    int    n;
+    char   line[MAXLINE];
+
+    n = snprintf(line, sizeof(line), GET_CMD, fptr->f_name);
+    written(fptr->f_fd, line, n);
+    printf("wrote %d bytes for %s\n", n, fptr->f_name);
+
+    fptr->f_flags = F_READING;
+
+    // 监听描述符的可读事件
+    FD_SET(fptr->f_fd, &rset);
+
+    if (fptr->f_fd > maxfd)
+        maxfd = fptr->f_fd;
 }
 
 int tcp_connect(const char *host, const char *port)
