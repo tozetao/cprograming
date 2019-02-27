@@ -1,51 +1,49 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <netdb.h>
+#include <string.h>
 
-void example1()
+struct User {
+    char *name;
+};
+
+struct User test()
 {
-    char const *keyTables[] = {
-        "dasheng",
-        "xiaoli",
-        "name",
-        "ab"
-    };
+    char content[] = "hello";
 
-    int i, length;
-    char const **ele = keyTables;
+    struct User u;
+
+    u.name = content;
+
+    return u;
+}
+
+struct addrinfo *host_serv(const char *host, const char *serv, int family, int socktype)
+{
+    int n;
+    struct addrinfo hints, *res;
+
+    bzero(&hints, sizeof(struct addrinfo));
+    hints.ai_family = family;
+    hints.ai_socktype = socktype;
+    hints.ai_flags = AI_CANONNAME;
     
-    length = sizeof(keyTables) / sizeof(keyTables[0]);
-    printf("%d\n", length);
-    for(i = 0; i < length; i++ ){
-        printf("%s\n", keyTables[i]);
-    }
+    if ((n = getaddrinfo(host, serv, &hints, &res)) != 0)
+        return NULL;
+
+    return res;
 }
 
-void example2()
+int main()
 {
-    char const *keyTables[] = {
-        "a",
-        "b",
-        "abcd",
-        NULL
-    };
+//    struct User user = test();
+//   printf("%s\n", user.name);
+    char host[] = "192.168.0.155";
+    char serv[] = "80";
 
-    char const **val = keyTables;
+    struct addrinfo *ai;
+    ai = host_serv(host, serv, 0, SOCK_STREAM);
+    printf("family: %d, protocal: %d, socktype: %d\n", ai->ai_family, ai->ai_protocol, ai->ai_socktype);
 
-    printf("%s\n", *val);
-    printf("%c\n", **val);
-
-    val = val + 2;
-    printf("%s\n", *val);
-
-    /*
-    int printf(char const *format, ...);
-    format：格式化字符串
-    ...是格式化字符所对应的具体的值，如果是int型则是具体的值，如果是字符串要对应字符串所指向的指针。
-    */
-}
-
-int main(int argc, char const *argv[])
-{
-    example2();
     return 0;
 }

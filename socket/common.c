@@ -15,3 +15,4 @@
 #define SERVE_PORT 9001
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
