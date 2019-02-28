@@ -1,6 +1,9 @@
 #include "socket_func.c"
 #include <netdb.h>
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/types.h>
 
 #define SERV "80"
 #define MAXFILES 20
@@ -27,14 +30,15 @@ void write_get_cmd(struct file *);
 int tcp_connect(const char *, const char *);
 struct addrinfo *host_serv(const char *, const char *, int, int);
 
-// web 3 127.0.0.1 file....
+// 非阻塞connect web客户端
+// 命令行：./a.out 1 192.168.0.155 /home.html /a.html /b.html /c.html
 int main(int argc, char **argv)
 {
     int i, n, fd, maxnconn, flags, error;
     char buf[MAXLINE];
     fd_set rs, ws;
 
-    if (argc < 5) {
+    if (argc < 4) {
         printf("argc error\n");
         exit(-1);
     }
@@ -54,7 +58,7 @@ int main(int argc, char **argv)
     // 请求home文件，参数2是host，参数3是home文件名
     home_page(argv[2], argv[3]);
 
-    FD_ZERO($rset);
+    FD_ZERO(&rset);
     FD_ZERO(&wset);
     maxfd = -1;
 
@@ -66,8 +70,7 @@ int main(int argc, char **argv)
 
     /* 
         nlefttoread是仍需读取的文件数，初始时等于要读取的文件个数，
-        当到达0时程序任务完成
-        select每次处理好一个文件，则会减1
+        当到达0时程序任务完成，在循环中select每次处理好一个文件，则会减1
     */
     while (nlefttoread > 0) {
         // 如果没有到达最大并行连接数，而且还有连接需要建立，那就找到一个未处理的文件，f_flags=0的文件
@@ -76,10 +79,10 @@ int main(int argc, char **argv)
         // nconn和maxnconn俩个变量控制并发数，nlefttoconn控制是否要开始一个连接。
         while (nconn < maxnconn && nlefttoconn > 0) {
             for (i = 0; i < nfiles; i++) 
-                if (file[0].f_flags == 0)
+                if (file[i].f_flags == 0)
                     break;
 
-            // 所有文件都处理完毕
+            // 所有文件都处理中
             if (i == nfiles) {
                 printf("nlefttoconn = %d but nothing found\n", nlefttoconn);
                 sleep(5);
@@ -120,7 +123,7 @@ int main(int argc, char **argv)
             } else if (flags & F_READING && FD_ISSET(fd, &rs)) {
                 // 连接建立成功，处理服务器相应数据
                 if ((n = read(fd, buf, sizeof(buf))) == 0) {
-                    printf("end-of-file on %s\n", file[i].f_name);
+                    printf("end-of-file on %s\n\n", file[i].f_name);
                     close(fd);
                     file[i].f_flags = F_DONE;
                     FD_CLR(fd, &rset);
@@ -153,7 +156,7 @@ void home_page(const char *host, const char *fname)
         printf("read %d bytes of home page\n", n);
     }
 
-    printf("end-of-file on home page \n");
+    printf("end-of-file on home page \n\n");
     close(fd);
 }
 

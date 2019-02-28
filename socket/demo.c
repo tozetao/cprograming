@@ -76,7 +76,7 @@ struct args {
 
 int main()
 {
-    //test_snprintf();
+    test_snprintf();
     //test_sscanf();
     //test_buffer();
 
@@ -96,12 +96,6 @@ int main()
 //        printf("%d\n", (int)strlen(buffer));
 //        fputs(buffer, stdout);
 //    }
-    char buffer[1024];
-
-    ssize_t n;
-
-    n = read(STDIN_FILENO, buffer, 0);
-    printf("%ld\n", n);
 
     return 0;
 }
