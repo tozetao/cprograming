@@ -22,6 +22,10 @@ struct file {
 
 #define GET_CMD "GET %s HTTP/1.0\r\n\r\n"
 
+int ndone = 0;
+pthread_mutex_t ndone_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t ndone_cond = PTHREAD_COND_INITIALIZER;
+
 int nconn, nfiles, nlefttoconn, nlefttoread;
 
 void *do_get_read(void *);
@@ -68,14 +72,9 @@ int main(int argc, char **argv)
     // 请求home文件，参数2是host，参数3是home文件名
     home_page(argv[2], argv[3]);
 
-    /* 
-        nlefttoread是仍需读取的文件数，初始时等于要读取的文件个数，
-        当到达0时程序任务完成，在循环中select每次处理好一个文件，则会减1
-    */
+    // 仍然有文件需要请求
     while (nlefttoread > 0) {
-        // 如果没有到达最大并行连接数，而且还有连接需要建立，那就找到一个未处理的文件，f_flags=0的文件
-        // 然后调用start_connect另发起一个连接
-        // nconn和maxnconn俩个变量控制并发数，nlefttoconn控制是否要开始一个连接。
+        // nlefttoconn是要发出请求的总数，nconn和maxconn俩个变量用于控制最大并发数(线程数)
         while (nconn < maxnconn && nlefttoconn > 0) {
             for (i = 0; i < nfiles; i++) 
                 if (file[i].f_flags == 0)
@@ -97,6 +96,15 @@ int main(int argc, char **argv)
             nlefttoconn--;
         }
 
+        // 处理逻辑
+        pthread_mutex_lock(&ndone_mutex);
+        while (ndone == 0)
+            pthread_cond_wait(&ndone_cond, &ndone_mutex);
+
+        pthread_mutex_unlock(&ndone_mutex);
+        
+        nlefttoread--;
+        nconn--;
     }
 
     return 0;
@@ -146,6 +154,13 @@ void *do_get_read(void *vptr)
     printf("end-of-file on %s\n", fptr->f_name);
     close(fd);
     fptr->f_flags = F_DONE;
+    
+    // 递增ndone，并发送信号到该条件变量
+    pthread_mutex_lock(&ndone_mutex);
+    ndone++;
+    pthread_cond_signal(&ndone_cond);
+    pthread_mutex_unlock(&ndone_mutex);
+
     return fptr;
 }
 

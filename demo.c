@@ -38,12 +38,14 @@ int main()
 {
 //    struct User user = test();
 //   printf("%s\n", user.name);
-    char host[] = "192.168.0.155";
-    char serv[] = "80";
+//    char host[] = "192.168.0.155";
+//    char serv[] = "80";
+//
+//    struct addrinfo *ai;
+//    ai = host_serv(host, serv, 0, SOCK_STREAM);
+//    printf("family: %d, protocal: %d, socktype: %d\n", ai->ai_family, ai->ai_protocol, ai->ai_socktype);
 
-    struct addrinfo *ai;
-    ai = host_serv(host, serv, 0, SOCK_STREAM);
-    printf("family: %d, protocal: %d, socktype: %d\n", ai->ai_family, ai->ai_protocol, ai->ai_socktype);
+    printf("%d\n", rand() % 5);
 
     return 0;
 }
