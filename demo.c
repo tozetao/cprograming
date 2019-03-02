@@ -5,6 +5,8 @@
 
 struct User {
     char *name;
+
+    int (*add)(char *name, int age);
 };
 
 struct User test()
@@ -36,8 +38,9 @@ struct addrinfo *host_serv(const char *host, const char *serv, int family, int s
 
 int main()
 {
-//    struct User user = test();
-//   printf("%s\n", user.name);
+      struct User user = test();
+      user.add("zhangsan", 20);
+
 //    char host[] = "192.168.0.155";
 //    char serv[] = "80";
 //
