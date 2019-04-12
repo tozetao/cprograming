@@ -1,0 +1,46 @@
+#include "socket_func.c"
+
+#define SERV "80"
+#define MAXFILES 20
+
+struct file {
+    char *f_name;
+    char *f_hsot;
+    int f_fd;
+    int f_flags;
+    pthread_t f_tid;
+} file[MAXFILES];
+
+#define F_CONNECTION 1
+#define F_READING 2
+#define F_DONE 4
+
+#define GET_CMD "GET %s HTTP/1.0\r\n\r\n"
+
+int nconn, nfiles, nlefttoconn, nlefttoread;
+
+void *to_get_read(void *);
+void home_page(const char *, const char *);
+void write_get_cmd(struct file *);
+
+int main(int argc, char **argv)
+{
+    int i, n, maxnconn;
+
+    pthread_t tid;
+    struct file *fptr;
+
+    if (argc < 5) {
+        printf("argc error\n");
+        exit(-1);
+    }
+
+    maxnconn = 10;
+    nfiles = MAXFILES;
+
+    for (i = 0; i < nfiles; i++) {
+        file[i].f_name = argv[i + 4];
+    }
+
+    return 0;
+}
